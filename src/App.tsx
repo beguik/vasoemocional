@@ -537,16 +537,32 @@ function VasoCard({
             <div className="mb-2 flex items-center gap-2 text-slate-600">
               <Flame className="h-4 w-4" /> Evolución (últimos meses)
             </div>
+
             <div className="h-56 w-full rounded-2xl border bg-white p-2">
               {chartData.length > 0 && (
-                <ResponsiveContainer width="100%" height={220}>
-                  <LineChart data={chartData} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
+                <ResponsiveContainer width="100%" height={220} /* altura fija */>
+                  <LineChart
+                    key={vaso.id}  // fuerza remount estable por vaso
+                    data={chartData}
+                    margin={{ top: 10, right: 20, bottom: 10, left: 0 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="dateISO" tick={{ fontSize: 12 }} height={30} tickMargin={8} />
                     <YAxis domain={[0, vaso.capacity]} allowDecimals={false} tick={{ fontSize: 12 }} width={40} />
-                    <Tooltip formatter={(value: number) => `${value} gotas`} labelFormatter={(l) => `Día ${l}`} />
+                    <Tooltip
+                      formatter={(value: number) => `${value} gotas`}
+                      labelFormatter={(l) => `Día ${l}`}
+                      // evita glitches de tooltip
+                      wrapperStyle={{ pointerEvents: "auto" }}
+                    />
                     <ReferenceLine y={vaso.threshold} strokeDasharray="4 4" />
-                    <Line type="monotone" dataKey="level" dot={false} strokeWidth={2} />
+                    <Line
+                      type="monotone"
+                      dataKey="level"
+                      dot={false}
+                      strokeWidth={2}
+                      isAnimationActive={false} // ← clave para evitar el removeChild
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               )}
