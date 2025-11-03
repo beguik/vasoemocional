@@ -32,6 +32,32 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
  */
 
 // ---------- Utilidades ----------
+class ChartErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(err: any) {
+    console.error("Chart crashed:", err);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="h-56 w-full rounded-2xl border bg-white p-4 text-sm text-slate-600">
+          Gráfico no disponible ahora mismo.
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const STORAGE_KEY = "vaso-emocional-multi-v1";
 
 const uid = () => crypto.randomUUID().replace(/-/g, "").slice(0, 10);
@@ -538,36 +564,42 @@ function VasoCard({
               <Flame className="h-4 w-4" /> Evolución (últimos meses)
             </div>
 
-            <div className="h-56 w-full rounded-2xl border bg-white p-2">
-              {chartData.length > 0 && (
-                <ResponsiveContainer width="100%" height={220} /* altura fija */>
-                  <LineChart
-                    key={vaso.id}  // fuerza remount estable por vaso
-                    data={chartData}
-                    margin={{ top: 10, right: 20, bottom: 10, left: 0 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="dateISO" tick={{ fontSize: 12 }} height={30} tickMargin={8} />
-                    <YAxis domain={[0, vaso.capacity]} allowDecimals={false} tick={{ fontSize: 12 }} width={40} />
-                    <Tooltip
-                      formatter={(value: number) => `${value} gotas`}
-                      labelFormatter={(l) => `Día ${l}`}
-                      // evita glitches de tooltip
-                      wrapperStyle={{ pointerEvents: "auto" }}
-                    />
-                    <ReferenceLine y={vaso.threshold} strokeDasharray="4 4" />
-                    <Line
-                      type="monotone"
-                      dataKey="level"
-                      dot={false}
-                      strokeWidth={2}
-                      isAnimationActive={false} // ← clave para evitar el removeChild
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </div>
+            <ChartErrorBoundary>
+              <div className="h-56 w-full rounded-2xl border bg-white p-2">
+                {chartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <LineChart
+                      key={vaso.id} // clave estable por vaso
+                      data={chartData}
+                      margin={{ top: 10, right: 20, bottom: 10, left: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="dateISO" tick={{ fontSize: 12 }} height={30} tickMargin={8} />
+                      <YAxis domain={[0, vaso.capacity]} allowDecimals={false} tick={{ fontSize: 12 }} width={40} />
+                      <Tooltip
+                        formatter={(value: number) => `${value} gotas`}
+                        labelFormatter={(l) => `Día ${l}`}
+                        wrapperStyle={{ pointerEvents: "auto" }}
+                      />
+                      <ReferenceLine y={vaso.threshold} strokeDasharray="4 4" />
+                      <Line
+                        type="monotone"
+                        dataKey="level"
+                        dot={false}
+                        strokeWidth={2}
+                        isAnimationActive={false} // clave para evitar removeChild
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[220px] flex items-center justify-center text-sm text-slate-500">
+                    Aún no hay datos para mostrar.
+                  </div>
+                )}
+              </div>
+            </ChartErrorBoundary>
           </div>
+
 
           {/* Eventos */}
           <div>
