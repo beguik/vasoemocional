@@ -156,42 +156,42 @@ export default function VasoEmocionalApp() {
       return bootstrapState();
     }
   });
-   const [online] = useState<boolean>(!!supabase);
+  const [online] = useState<boolean>(!!supabase);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
   const [lastError, setLastError] = useState<string | null>(null);
 
   // Carga inicial y realtime Supabase
- useEffect(() => {
-  if (!supabase) return;
-  let channel: RealtimeChannel | null = null;
-(async () => {
-    // (opcional) tu upsert/select inicial aquí…
+  useEffect(() => {
+    if (!supabase) return;
+    let channel: RealtimeChannel | null = null;
+    (async () => {
+      // (opcional) tu upsert/select inicial aquí…
 
-    // Crear y suscribir canal
-    channel = supabase
-      .channel(`rooms-${roomId}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "rooms", filter: `id=eq.${roomId}` },
-        (payload) => {
-          const newData = (payload.new as any).data;
-          if (newData) {
-            const migrated = migrateIfNeeded(newData);
-            setState(migrated);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+      // Crear y suscribir canal
+      channel = supabase
+        .channel(`rooms-${roomId}`)
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "rooms", filter: `id=eq.${roomId}` },
+          (payload) => {
+            const newData = (payload.new as any).data;
+            if (newData) {
+              const migrated = migrateIfNeeded(newData);
+              setState(migrated);
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+            }
           }
-        }
-      )
-      .subscribe(); // devuelve RealtimeChannel
-  })();
+        )
+        .subscribe(); // devuelve RealtimeChannel
+    })();
 
-  // Cleanup SIN devolver una promesa y con null-check
-  return () => {
-    if (channel) {
-      void channel.unsubscribe();
-    }
-  };
-}, [roomId]);
+    // Cleanup SIN devolver una promesa y con null-check
+    return () => {
+      if (channel) {
+        void channel.unsubscribe();
+      }
+    };
+  }, [roomId]);
 
 
   // Persistencia local
@@ -370,11 +370,11 @@ export default function VasoEmocionalApp() {
               {saveStatus === "idle" && ""}
             </span>
             <Button variant="outline" className="rounded-2xl" onClick={() => pushToCloudImmediate(state)}>Guardar ahora</Button>
-            <Button variant="secondary" className="rounded-2xl inline-flex gap-2" onClick={() => navigator.clipboard.writeText(location.href).then(()=>alert("Enlace copiado"))}>
-              <Share2 className="h-4 w-4"/> Compartir
+            <Button variant="secondary" className="rounded-2xl inline-flex gap-2" onClick={() => navigator.clipboard.writeText(location.href).then(() => alert("Enlace copiado"))}>
+              <Share2 className="h-4 w-4" /> Compartir
             </Button>
             <Button className="rounded-2xl inline-flex gap-2" onClick={createVaso}>
-              <PlusCircle className="h-4 w-4"/> Añadir vaso
+              <PlusCircle className="h-4 w-4" /> Añadir vaso
             </Button>
           </div>
         </div>
@@ -438,11 +438,11 @@ function VasoCard({
           <CardTitle className="text-xl flex items-center gap-2">
             {vaso.name}
             <Button variant="ghost" size="sm" onClick={onRename} className="rounded-xl inline-flex gap-1">
-              <Pencil className="h-4 w-4"/> Renombrar
+              <Pencil className="h-4 w-4" /> Renombrar
             </Button>
           </CardTitle>
           <Button variant="ghost" size="sm" onClick={onDelete} className="text-rose-600 rounded-xl inline-flex gap-1">
-            <Trash2 className="h-4 w-4"/> Eliminar
+            <Trash2 className="h-4 w-4" /> Eliminar
           </Button>
         </div>
       </CardHeader>
@@ -471,7 +471,7 @@ function VasoCard({
             <div className="grid grid-cols-1 gap-3">
               <Label htmlFor={`label-${vaso.id}`}>Etiqueta</Label>
               <Input id={`label-${vaso.id}`} placeholder="p.ej., discusión por tareas" value={label} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLabel(e.target.value)}
- />
+              />
 
               <div className="flex items-center justify-between">
                 <Label>Gotas: {drops}</Label>
@@ -483,7 +483,7 @@ function VasoCard({
                 <Button variant="secondary" onClick={() => quickAdd("small")} className="rounded-2xl">+ pequeño (+2)</Button>
                 <Button variant="secondary" onClick={() => quickAdd("medium")} className="rounded-2xl">+ mediano (+4)</Button>
                 <Button variant="secondary" onClick={() => quickAdd("large")} className="rounded-2xl">+ grande (+8)</Button>
-                <Button variant="ghost" onClick={onUndo} className="rounded-2xl inline-flex gap-2"><Undo2 className="h-4 w-4"/> Deshacer último</Button>
+                <Button variant="ghost" onClick={onUndo} className="rounded-2xl inline-flex gap-2"><Undo2 className="h-4 w-4" /> Deshacer último</Button>
               </div>
             </div>
           </div>
@@ -526,7 +526,7 @@ function VasoCard({
                   <Label htmlFor={`auto-${vaso.id}`}>Evaporación automática</Label>
                 </div>
                 <Button variant="outline" onClick={() => onChange({ ...defaultVaso(vaso.name), id: vaso.id })} className="rounded-2xl inline-flex gap-2">
-                  <RefreshCw className="h-4 w-4"/> Reset vaso
+                  <RefreshCw className="h-4 w-4" /> Reset vaso
                 </Button>
               </div>
             </div>
@@ -538,16 +538,18 @@ function VasoCard({
               <Flame className="h-4 w-4" /> Evolución (últimos meses)
             </div>
             <div className="h-56 w-full rounded-2xl border bg-white p-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="dateISO" tick={{ fontSize: 12 }} angle={0} height={30} tickMargin={8} />
-                  <YAxis domain={[0, vaso.capacity]} allowDecimals={false} tick={{ fontSize: 12 }} width={40} />
-                  <Tooltip formatter={(value) => `${value} gotas`} labelFormatter={(l) => `Día ${l}`} />
-                  <ReferenceLine y={vaso.threshold} strokeDasharray="4 4" />
-                  <Line type="monotone" dataKey="level" dot={false} strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
+              {chartData.length > 0 && (
+                <ResponsiveContainer width="100%" height={220}>
+                  <LineChart data={chartData} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="dateISO" tick={{ fontSize: 12 }} height={30} tickMargin={8} />
+                    <YAxis domain={[0, vaso.capacity]} allowDecimals={false} tick={{ fontSize: 12 }} width={40} />
+                    <Tooltip formatter={(value: number) => `${value} gotas`} labelFormatter={(l) => `Día ${l}`} />
+                    <ReferenceLine y={vaso.threshold} strokeDasharray="4 4" />
+                    <Line type="monotone" dataKey="level" dot={false} strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
 
