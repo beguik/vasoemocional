@@ -32,31 +32,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
  */
 
 // ---------- Utilidades ----------
-class ChartErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean }
-> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-  componentDidCatch(err: any) {
-    console.error("Chart crashed:", err);
-  }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="h-56 w-full rounded-2xl border bg-white p-4 text-sm text-slate-600">
-          Gráfico no disponible ahora mismo.
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
+
 
 const STORAGE_KEY = "vaso-emocional-multi-v1";
 
@@ -456,52 +432,52 @@ function VasoCard({
     const map = { small: 2, medium: 4, large: 8 } as const;
     onAddEvent(size === "small" ? "Molestia pequeña" : size === "medium" ? "Problema mediano" : "Conflicto grande", map[size]);
   }
-// Evita error "removeChild" de Recharts en montajes/desmontajes
-function SafeChart({ vaso, data }: { vaso: Vaso; data: any[] }) {
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 50); // esperar layout estable
-    return () => clearTimeout(t);
-  }, []);
+  // Evita error "removeChild" de Recharts en montajes/desmontajes
+  function SafeChart({ vaso, data }: { vaso: Vaso; data: any[] }) {
+    const [mounted, setMounted] = React.useState(false);
+    React.useEffect(() => {
+      const t = setTimeout(() => setMounted(true), 50); // esperar layout estable
+      return () => clearTimeout(t);
+    }, []);
 
-  if (!mounted) return null; // no renderiza hasta que el DOM esté listo
+    if (!mounted) return null; // no renderiza hasta que el DOM esté listo
 
-  try {
-    return (
-      <ResponsiveContainer width="100%" height={220}>
-        <LineChart
-          key={vaso.id}
-          data={data}
-          margin={{ top: 10, right: 20, bottom: 10, left: 0 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="dateISO" tick={{ fontSize: 12 }} height={30} tickMargin={8} />
-          <YAxis domain={[0, vaso.capacity]} allowDecimals={false} tick={{ fontSize: 12 }} width={40} />
-          <Tooltip
-            formatter={(value: number) => `${value} gotas`}
-            labelFormatter={(l) => `Día ${l}`}
-            wrapperStyle={{ pointerEvents: "auto" }}
-          />
-          <ReferenceLine y={vaso.threshold} strokeDasharray="4 4" />
-          <Line
-            type="monotone"
-            dataKey="level"
-            dot={false}
-            strokeWidth={2}
-            isAnimationActive={false} // <- clave para evitar removeChild
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    );
-  } catch (err) {
-    console.error("Error renderizando gráfico:", err);
-    return (
-      <div className="h-[220px] flex items-center justify-center text-sm text-slate-500">
-        Gráfico no disponible
-      </div>
-    );
+    try {
+      return (
+        <ResponsiveContainer width="100%" height={220}>
+          <LineChart
+            key={vaso.id}
+            data={data}
+            margin={{ top: 10, right: 20, bottom: 10, left: 0 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="dateISO" tick={{ fontSize: 12 }} height={30} tickMargin={8} />
+            <YAxis domain={[0, vaso.capacity]} allowDecimals={false} tick={{ fontSize: 12 }} width={40} />
+            <Tooltip
+              formatter={(value: number) => `${value} gotas`}
+              labelFormatter={(l) => `Día ${l}`}
+              wrapperStyle={{ pointerEvents: "auto" }}
+            />
+            <ReferenceLine y={vaso.threshold} strokeDasharray="4 4" />
+            <Line
+              type="monotone"
+              dataKey="level"
+              dot={false}
+              strokeWidth={2}
+              isAnimationActive={false} // <- clave para evitar removeChild
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      );
+    } catch (err) {
+      console.error("Error renderizando gráfico:", err);
+      return (
+        <div className="h-[220px] flex items-center justify-center text-sm text-slate-500">
+          Gráfico no disponible
+        </div>
+      );
+    }
   }
-}
 
   return (
     <Card className="shadow-xl">
